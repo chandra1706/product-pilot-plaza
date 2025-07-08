@@ -10,8 +10,7 @@ import {
   Users,
   BarChart3,
   Settings,
-  LogOut,
-  Menu
+  LogOut
 } from 'lucide-react';
 import {
   Sidebar,
@@ -40,23 +39,22 @@ const adminMenuItems = [
 ];
 
 function AdminSidebar() {
-  const { collapsed } = useSidebar();
+  const { state } = useSidebar();
   const { user, logout } = useAuth();
   const location = useLocation();
   
   const isActive = (path: string) => location.pathname === path;
+  const isCollapsed = state === 'collapsed';
 
   return (
-    <Sidebar className={collapsed ? "w-14" : "w-60"} collapsible>
-      <SidebarTrigger className="m-2 self-end" />
-      
+    <Sidebar collapsible="icon">
       <SidebarContent>
         <div className="p-4 border-b">
           <div className="flex items-center gap-3">
             <div className="bg-primary p-2 rounded-lg">
               <Settings className="h-6 w-6 text-primary-foreground" />
             </div>
-            {!collapsed && (
+            {!isCollapsed && (
               <div>
                 <h2 className="font-bold text-lg">Admin Panel</h2>
                 <p className="text-xs text-muted-foreground">ShopHub Management</p>
@@ -77,7 +75,7 @@ function AdminSidebar() {
                       className={isActive(item.url) ? "bg-primary text-primary-foreground font-medium" : "hover:bg-muted/50"}
                     >
                       <item.icon className="mr-2 h-4 w-4" />
-                      {!collapsed && <span>{item.title}</span>}
+                      {!isCollapsed && <span>{item.title}</span>}
                     </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
@@ -88,7 +86,7 @@ function AdminSidebar() {
 
         <div className="mt-auto p-4 border-t">
           <div className="flex items-center justify-between">
-            {!collapsed && (
+            {!isCollapsed && (
               <div className="flex-1">
                 <p className="text-sm font-medium">{user?.name}</p>
                 <p className="text-xs text-muted-foreground">{user?.email}</p>
@@ -108,7 +106,7 @@ function AdminSidebar() {
             <Link to="/">
               <Button variant="outline" size="sm" className="w-full">
                 <Home className="mr-2 h-4 w-4" />
-                {!collapsed && "Back to Store"}
+                {!isCollapsed && "Back to Store"}
               </Button>
             </Link>
           </div>
@@ -126,17 +124,19 @@ export const AdminLayout = ({ children }: AdminLayoutProps) => {
   }
 
   return (
-    <SidebarProvider collapsedWidth={56}>
-      <header className="h-12 flex items-center border-b bg-background/95 backdrop-blur">
-        <SidebarTrigger className="ml-2" />
-        <h1 className="ml-4 font-semibold">Admin Dashboard</h1>
-      </header>
-      
+    <SidebarProvider>
       <div className="flex min-h-screen w-full">
         <AdminSidebar />
-        <main className="flex-1 p-6 bg-muted/30">
-          {children}
-        </main>
+        <div className="flex-1 flex flex-col">
+          <header className="h-12 flex items-center border-b bg-background/95 backdrop-blur px-4">
+            <SidebarTrigger />
+            <h1 className="ml-4 font-semibold">Admin Dashboard</h1>
+          </header>
+          
+          <main className="flex-1 p-6 bg-muted/30">
+            {children}
+          </main>
+        </div>
       </div>
     </SidebarProvider>
   );
