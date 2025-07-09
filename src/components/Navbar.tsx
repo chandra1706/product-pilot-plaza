@@ -71,6 +71,12 @@ export const Navbar = () => {
               </Button>
             </Link>
 
+            <Link to="/contact">
+              <Button variant="ghost" size="sm">
+                Contact
+              </Button>
+            </Link>
+
             {/* Cart */}
             <Link to="/cart" className="relative">
               <Button variant="ghost" size="icon">

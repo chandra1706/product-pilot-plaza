@@ -10,7 +10,8 @@ import {
   Users,
   BarChart3,
   Settings,
-  LogOut
+  LogOut,
+  MessageCircle
 } from 'lucide-react';
 import {
   Sidebar,
@@ -34,6 +35,7 @@ const adminMenuItems = [
   { title: 'Dashboard', url: '/admin', icon: BarChart3 },
   { title: 'Products', url: '/admin/products', icon: Package },
   { title: 'Orders', url: '/admin/orders', icon: ShoppingCart },
+  { title: 'Messages', url: '/admin/messages', icon: MessageCircle },
   { title: 'Customers', url: '/admin/customers', icon: Users },
   { title: 'Settings', url: '/admin/settings', icon: Settings },
 ];
