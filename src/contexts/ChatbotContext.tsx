@@ -2,7 +2,8 @@ import {SitemapService} from '../utils/SitemapService';
 import { Button } from '@/components/ui/button';
 import { MessageCircle, X, Send, Minimize2 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useState, ReactNode, useEffect, useRef } from 'react';
+import { set } from 'date-fns';
 
 export interface ChatMessage {
   id: string;
@@ -213,14 +214,57 @@ export const ChatbotProvider = ({ children }: { children: ReactNode }) => {
                   }
                 : data.narration
             );
+          } else {
+            const botMessage: ChatMessage = {
+              id: `msg-${Date.now()}`,
+              content: (
+                <>
+                  {data.narration || getRandomResponse()}
+                  <div className="mt-2">
+                    <Button
+                          key={baseUrl}
+                          asChild
+                          variant="outline"
+                          className="justify-start text-left button0"
+                          onClick={() => window.open(baseUrl, '_blank')}
+                        >
+                          <a href={baseUrl} target="_blank" rel="noopener noreferrer">
+                            {'Home'}
+                          </a>
+                        </Button>
+                  </div>
+                </>
+              ) as unknown as string,
+              sender: 'bot',
+              timestamp: new Date().toISOString(),
+              type: 'text'
+            };
+            setCurrentSession(prev =>
+              prev
+                ? {
+                    ...prev,
+                    messages: [...prev.messages, botMessage],
+                    updatedAt: new Date().toISOString()
+                  }
+                : data.narration
+            );
           }
         }
       } catch (error) {
         console.error('Error sending message:', error); 
       }
     } 
-    setIsTyping(false);
+    setIsTyping(false); 
 
+    setTimeout(() => {
+      useEffect(() => {
+      const button =  document.querySelector('.button0') as HTMLButtonElement ;
+      console.log('Button found:', button);
+        if (button) {
+          button.click();
+        }
+      }, []);
+    }, 1000); // Simulate a delay for bot response
   };
 
   return (
