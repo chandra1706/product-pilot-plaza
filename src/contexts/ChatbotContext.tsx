@@ -1,4 +1,7 @@
-
+import {SitemapService} from '../utils/SitemapService';
+import { Button } from '@/components/ui/button';
+import { MessageCircle, X, Send, Minimize2 } from 'lucide-react';
+import { Input } from '@/components/ui/input';
 import React, { createContext, useContext, useState, ReactNode } from 'react';
 
 export interface ChatMessage {
@@ -111,23 +114,113 @@ export const ChatbotProvider = ({ children }: { children: ReactNode }) => {
 
     // Simulate bot typing
     setIsTyping(true);
-    
-    setTimeout(() => {
-      const botMessage: ChatMessage = {
-        id: `msg-${Date.now() + 1}`,
-        content: getRandomResponse(),
-        sender: 'bot',
-        timestamp: new Date().toISOString(),
-        type: 'text'
-      };
 
-      setCurrentSession(prev => prev ? {
-        ...prev,
-        messages: [...prev.messages, botMessage],
-        updatedAt: new Date().toISOString()
-      } : null);
-      setIsTyping(false);
-    }, 1000 + Math.random() * 2000);
+    // Get the base URL of the site where the chatbot is installed
+    let baseUrl = window.location.origin;
+    console.log('Chatbot base URL:', baseUrl);
+
+    // Test with a real website
+    const { success, xml } = await SitemapService.getRawSitemapXml(baseUrl);
+    //console.log('getRawSitemapXml response:', xml);
+    const sitemapData = await SitemapService.readSitemap(`${baseUrl}/sitemap.xml`);
+    //console.log('readSitemap response:', sitemapData);
+    let pageContent = '';
+    if (sitemapData.success && sitemapData.data.urls && sitemapData.data.urls[0]) {
+      const pageContentResult = await SitemapService.getPageContent(sitemapData.data.urls[0].loc);
+      pageContent = pageContentResult && pageContentResult.success && typeof pageContentResult.content === 'string'
+        ? pageContentResult.content
+        : '';
+    }
+    //console.log('pageContent response:', pageContent);
+    
+    if (success && typeof xml === 'string' && typeof pageContent === 'string') {
+      try {
+        const response = await fetch('https://aimonth-sensai-app--0000005.kindmeadow-53087716.westus2.azurecontainerapps.io/api/chat', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            message: userMessage.content,
+            domString: pageContent, 
+            siteMap: xml
+          })
+        });
+
+        if (!response.ok) {
+          const errorText = await response.text();
+          throw new Error(`API error: ${response.status} ${errorText}`);
+        }
+
+        const data = await response.json();
+        console.log('API response:', data);
+        
+        if (Array.isArray(sitemapData.data.urls)) {
+          const inputWords = userMessage.content.toLowerCase().split(/\s+/).filter(Boolean);
+          // Find all URLs that match any input word
+            const matchedUrls = sitemapData.data.urls.filter(
+              (u: { loc: string }) => {
+                try {
+                  const urlObj = new URL(u.loc);
+                  const pathSegments = urlObj.pathname.split('/').filter(Boolean);
+                  const lastSlug = pathSegments[pathSegments.length - 1]?.toLowerCase() || '';
+                  return inputWords.some(word => lastSlug.includes(word));
+                } catch {
+                  return false;
+                }
+              }
+            );
+          console.log('Matched URLs:', matchedUrls);          
+          // buttons containing matched URLs
+          if (matchedUrls.length > 0) {
+            const quickReplies: ChatMessage = {
+              id: `quick-reply`,
+              content: (
+                <>
+                  {data.narration || getRandomResponse()}
+                  <div>Related pages:</div>
+                  <div className="flex flex-col gap-2 mt-2">
+                    {matchedUrls.map((u: { loc: string }, idx: number) => (
+                      <Button
+                        key={u.loc}
+                        asChild
+                        variant="outline"
+                        className={`justify-start text-left button${idx}`}
+                        onClick={() => window.open(u.loc, '_blank')}
+                      >
+                        <a href={u.loc} target="_blank" rel="noopener noreferrer">
+                          {u.loc.replace(baseUrl, '').replace(/^\//, '') || 'Home'}
+                        </a>
+                      </Button>
+                    ))}
+                  </div>
+                </>
+              ) as unknown as string,
+              sender: 'bot' as 'bot',
+              timestamp: new Date().toISOString(),
+              type: 'quick-reply'
+            };
+
+            setCurrentSession(prev =>
+              prev
+                ? {
+                    ...prev,
+                    messages: [
+                      ...prev.messages,
+                      quickReplies
+                    ],
+                    updatedAt: new Date().toISOString()
+                  }
+                : data.narration
+            );
+          }
+        }
+      } catch (error) {
+        console.error('Error sending message:', error); 
+      }
+    } 
+    setIsTyping(false);
+
   };
 
   return (
