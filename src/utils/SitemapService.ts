@@ -186,8 +186,31 @@ export class SitemapService {
   }
   static async getPageContent(url: string): Promise<{ success: boolean; content?: string; error?: string }> {
     try {
-      const corsProxy = 'https://cors-anywhere.com/';
-      const response = await fetch(corsProxy + url);
+      const corsProxies = [
+        'https://cors-anywhere.com/',
+        'https://thingproxy.freeboard.io/fetch/',
+        'https://api.allorigins.win/raw?url=',
+        'https://corsproxy.io/?'
+      ];
+      // Try each proxy until one works
+      let response: Response | undefined;
+      let lastError: string | undefined;
+      for (const proxy of corsProxies) {
+        try {
+          const proxyUrl = proxy.endsWith('=') || proxy.endsWith('?') ? proxy + encodeURIComponent(sitemapUrl) : proxy + sitemapUrl;
+          response = await fetch(proxyUrl);
+          if (response.ok) break;
+          lastError = `Failed with proxy ${proxy}: ${response.status} ${response.statusText}`;
+        } catch (err) {
+          lastError = `Error with proxy ${proxy}: ${err instanceof Error ? err.message : String(err)}`;
+        }
+      }
+      if (!response || !response.ok) {
+        return {
+          success: false,
+          error: lastError || 'Failed to fetch sitemap with all proxies'
+        };
+      }
       
       if (!response.ok) {
         return {
