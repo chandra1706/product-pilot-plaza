@@ -155,7 +155,7 @@ export const ChatbotProvider = ({ children }: { children: ReactNode }) => {
 
         const data = await response.json();
         console.log('API response:', data);
-        
+        const requestId = `${Date.now()}`;
         if (Array.isArray(sitemapData.data.urls)) {
           const inputWords = userMessage.content.toLowerCase().split(/\s+/).filter(Boolean);
           // Find all URLs that match any input word
@@ -175,7 +175,7 @@ export const ChatbotProvider = ({ children }: { children: ReactNode }) => {
           // buttons containing matched URLs
           if (matchedUrls.length > 0) {
             const quickReplies: ChatMessage = {
-              id: `quick-reply`,
+              id: `msg-${Date.now()}`,
               content: (
                 <>
                   {data.narration || getRandomResponse()}
@@ -186,7 +186,7 @@ export const ChatbotProvider = ({ children }: { children: ReactNode }) => {
                         key={u.loc}
                         asChild
                         variant="outline"
-                        className={`justify-start text-left button${idx}`}
+                        className={`justify-start text-left button${requestId}`}
                         onClick={() => window.open(u.loc, '_blank')}
                       >
                         <a href={u.loc} target="_blank" rel="noopener noreferrer">
@@ -199,7 +199,6 @@ export const ChatbotProvider = ({ children }: { children: ReactNode }) => {
               ) as unknown as string,
               sender: 'bot' as 'bot',
               timestamp: new Date().toISOString(),
-              type: 'quick-reply'
             };
 
             setCurrentSession(prev =>
@@ -216,7 +215,7 @@ export const ChatbotProvider = ({ children }: { children: ReactNode }) => {
             );
           } else {
             const botMessage: ChatMessage = {
-              id: `msg-${Date.now()}`,
+              id: `msgs-${Date.now()}`,
               content: (
                 <>
                   {data.narration || getRandomResponse()}
@@ -225,7 +224,7 @@ export const ChatbotProvider = ({ children }: { children: ReactNode }) => {
                           key={baseUrl}
                           asChild
                           variant="outline"
-                          className="justify-start text-left button0"
+                          className={`justify-start text-left button${requestId}`}
                           onClick={() => window.open(baseUrl, '_blank')}
                         >
                           <a href={baseUrl} target="_blank" rel="noopener noreferrer">
@@ -237,7 +236,6 @@ export const ChatbotProvider = ({ children }: { children: ReactNode }) => {
               ) as unknown as string,
               sender: 'bot',
               timestamp: new Date().toISOString(),
-              type: 'text'
             };
             setCurrentSession(prev =>
               prev
@@ -248,12 +246,14 @@ export const ChatbotProvider = ({ children }: { children: ReactNode }) => {
                   }
                 : data.narration
             );
+            
           }
-           const button =  document.querySelector('.button0') as HTMLButtonElement ;
-          console.log('Button found:', button);
-            if (button) {
-              button.click();
-            }
+          setTimeout(() => {
+              const button =  document.querySelector(`.button${requestId}`) as HTMLButtonElement;
+              if (button) {
+                button.click();
+              }
+            }, 1000);
         }
       } catch (error) {
         console.error('Error sending message:', error); 
@@ -261,6 +261,7 @@ export const ChatbotProvider = ({ children }: { children: ReactNode }) => {
     } 
     setIsTyping(false); 
 
+    
   };
 
   return (
