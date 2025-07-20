@@ -249,6 +249,11 @@ export const ChatbotProvider = ({ children }: { children: ReactNode }) => {
                 : data.narration
             );
           }
+           const button =  document.querySelector('.button0') as HTMLButtonElement ;
+          console.log('Button found:', button);
+            if (button) {
+              button.click();
+            }
         }
       } catch (error) {
         console.error('Error sending message:', error); 
@@ -256,15 +261,6 @@ export const ChatbotProvider = ({ children }: { children: ReactNode }) => {
     } 
     setIsTyping(false); 
 
-    setTimeout(() => {
-      useEffect(() => {
-      const button =  document.querySelector('.button0') as HTMLButtonElement ;
-      console.log('Button found:', button);
-        if (button) {
-          button.click();
-        }
-      }, []);
-    }, 1000); // Simulate a delay for bot response
   };
 
   return (
