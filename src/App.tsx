@@ -23,6 +23,7 @@ import AdminOrders from "./pages/admin/AdminOrders";
 import AdminMessages from "./pages/admin/AdminMessages";
 import NotFound from "./pages/NotFound";
 import AdminChatbot from "./pages/admin/AdminChatbot";
+import Sitemap from "sitemap";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -58,6 +59,7 @@ const App = () => (
                   <Route path="/admin/orders" element={<AdminOrders />} />
                   <Route path="/admin/messages" element={<AdminMessages />} />
                   <Route path="/admin/chatbot" element={<AdminChatbot />} />
+                  <Route path="/sitemap" element={<Sitemap />} />
                   <Route path="*" element={<NotFound />} />
                 </Routes>
                 <ChatWidget />
